@@ -9,7 +9,7 @@
 - 千问搜索（Qwen / DashScope）
 - 秘塔搜索（Metaso）
 - 智普搜索（Zhipu AI / GLM）
-- 其他兼容 OpenAI 接口的搜索服务
+- 其他兼容接口的搜索服务
 
 本插件不属于 OpenClaw 主仓库的 `extensions/*`，而是作为独立 npm 包发布并通过 `openclaw plugins install` 安装。
 
@@ -125,7 +125,7 @@ import {
 
 ## 每个 Provider 的实现模式
 
-参考 `openai-search` 插件（位于父目录 `../extensions/openai-search/`）的实现方式：
+参考本项目现有 Provider 与共享基础设施的实现方式：
 
 1. **Provider 配置解析**：从 `searchConfig?.{scopeKey}` 读取 scoped config
 2. **凭据解析**：`readConfiguredSecretString` + `readProviderEnvValue` 双路径

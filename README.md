@@ -4,11 +4,11 @@
 [![GitHub](https://img.shields.io/badge/GitHub-WW--AI--Lab%2Fopenclaw--web--search-blue)](https://github.com/WW-AI-Lab/openclaw-web-search)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
-`openclaw-web-search` 是 [OpenClaw](https://github.com/openclaw/openclaw) 的独立外部插件，目标是逐步为 OpenClaw 接入国产大模型原生联网搜索能力，以及兼容 OpenAI 风格接口的第三方搜索服务。
+`openclaw-web-search` 是 [OpenClaw](https://github.com/openclaw/openclaw) 的独立外部插件，用来补齐 OpenClaw 默认缺少国产大模型联网搜索能力的问题。
 
-当前版本聚焦于把国产搜索 Provider 做成可安装、可配置、可发布的独立 npm 包，后续会按路线图逐步扩展更多线路。
+这个项目的目标很直接：把国产搜索 Provider 做成可安装、可配置、可发布的独立插件，让 OpenClaw 能更方便地接入千问、豆包、秘塔、智普等国产搜索线路。
 
-## 项目简介
+## 为什么需要这个插件
 
 这个插件不属于 OpenClaw 主仓库内置 `extensions/*`，而是作为外部插件发布：
 
@@ -16,6 +16,13 @@
 - 插件 ID：`openclaw-web-search`
 - 发布方式：`openclaw plugins install @ww-ai-lab/openclaw-web-search`
 - 许可证：MIT
+
+它要解决的问题是：
+
+- OpenClaw 默认没有开箱即用的国产大模型搜索适配。
+- 不同国产搜索服务的协议、鉴权方式、返回结构并不一致。
+- 需要一个独立插件，把这些差异统一收敛到 OpenClaw 的 `web_search` Provider 接口中。
+- 插件独立发布后，可以不依赖 OpenClaw 主仓库发版节奏，逐步增加新的国产搜索 Provider。
 
 ## 已支持与规划中的 Provider
 
@@ -25,7 +32,7 @@
 | 豆包 / 火山引擎 ARK | `doubao` | 规划中 | 接入豆包原生搜索或兼容线路 |
 | 秘塔搜索 | `metaso` | 规划中 | 适配秘塔搜索 API |
 | 智普 GLM 搜索 | `zhipu` | 规划中 | 接入智普原生 Web 搜索能力 |
-| OpenAI 兼容搜索服务 | `compatible` | 规划中 | 兼容更多带搜索能力的 OpenAI 风格接口 |
+| 其他兼容接口的搜索服务 | `compatible` | 规划中 | 作为补充线路，适配更多可接入的搜索服务 |
 
 ## 路线图
 
@@ -34,24 +41,8 @@
 1. 第一阶段：完成 Qwen（DashScope 原生协议）接入，验证插件配置、缓存、错误处理、引用输出、npm 发布链路。
 2. 第二阶段：增加豆包 / ARK 搜索适配，统一配置结构与凭据解析链。
 3. 第三阶段：增加秘塔搜索与智普搜索，补充更多响应归一化测试。
-4. 第四阶段：抽象更多共享基础设施，兼容更多 OpenAI 风格的搜索服务。
+4. 第四阶段：抽象更多共享基础设施，兼容更多可接入的搜索服务。
 5. 第五阶段：完善 Provider 选择策略、文档、示例与自动化发布流程。
-
-## 与 OpenClaw 内置 `openai-search` 的差异
-
-以当前已实现的 Qwen 线路为例：
-
-| 能力 | `openclaw-web-search`（qwen） | `openai-search` |
-|---|---|---|
-| 协议 | DashScope 原生协议 | OpenAI 兼容协议 |
-| 搜索来源返回 | 支持结构化 `search_info` | 主要依赖文本解析 |
-| 角标引用标注 | 支持 `enableCitation` | 不支持 |
-| 搜索策略 | 支持 `turbo` / `max` | 不支持 |
-| 强制搜索 | 支持 | 不支持 |
-| 搜索时效性 | 支持 | 不支持 |
-| 垂域搜索扩展 | 支持 | 不支持 |
-
-两个插件可以共存，由 OpenClaw 的 Provider 选择逻辑自动决定优先级。
 
 ## 安装说明
 
