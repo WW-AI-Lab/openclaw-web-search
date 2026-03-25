@@ -3,37 +3,93 @@
   "name": "OpenClaw Web Search",
   "description": "Independent external web_search plugin for OpenClaw",
   "providerAuthEnvVars": {
-    "openclaw-web-search": ["OPENCLAW_WEB_SEARCH_API_KEY"]
+    "qwen-dashscope": ["DASHSCOPE_API_KEY"]
   },
   "uiHints": {
-    "webSearch.apiKey": {
-      "label": "Web Search API Key",
-      "help": "外部 web_search 服务的 API Key。也可通过 OPENCLAW_WEB_SEARCH_API_KEY 提供。",
+    "qwen.apiKey": {
+      "label": "DashScope API Key",
+      "help": "阿里云百炼平台（DashScope）的 API Key。也可通过环境变量 DASHSCOPE_API_KEY 提供。",
       "sensitive": true,
-      "placeholder": "ws_..."
+      "placeholder": "sk-..."
     },
-    "webSearch.baseUrl": {
-      "label": "Base URL",
-      "help": "外部 web_search 服务地址，默认使用占位示例地址。"
+    "qwen.model": {
+      "label": "搜索模型",
+      "help": "联网搜索使用的模型，默认 qwen-plus。支持 qwen3-max、qwen3.5-plus、qwen-turbo 等。"
     },
-    "webSearch.timeoutSeconds": {
-      "label": "Timeout Seconds",
-      "help": "请求超时时间，单位秒。"
+    "qwen.searchStrategy": {
+      "label": "搜索量级策略",
+      "help": "搜索量级，可选 turbo（轻量，默认）、max（深度）。turbo 仅搜索一次，max 会多次搜索并交叉验证。"
+    },
+    "qwen.forcedSearch": {
+      "label": "强制搜索",
+      "help": "是否强制执行搜索（即使模型认为不需要）。默认关闭。"
+    },
+    "qwen.enableThinking": {
+      "label": "深度思考模式",
+      "help": "是否启用深度思考（Thinking）模式。启用后模型会先进行推理再回答。默认关闭。"
+    },
+    "qwen.enableSearchExtension": {
+      "label": "垂域搜索",
+      "help": "是否启用垂域搜索（如天气、股票等结构化数据）。默认关闭。"
+    },
+    "qwen.enableSource": {
+      "label": "返回搜索来源",
+      "help": "是否返回搜索来源信息（DashScope 原生协议独有能力）。默认开启。"
+    },
+    "qwen.enableCitation": {
+      "label": "角标引用标注",
+      "help": "是否在回复中插入角标引用（如 [1]、[2]）。需 enableSource 为 true。默认关闭。"
+    },
+    "qwen.citationFormat": {
+      "label": "角标格式",
+      "help": "角标引用的格式，可选 [<number>]（默认）或 [ref_<number>]。"
+    },
+    "qwen.freshness": {
+      "label": "搜索时效性",
+      "help": "限定搜索结果的时效范围（天数），可选 7、30、180、365。不设置则不限制。"
+    },
+    "qwen.timeoutSeconds": {
+      "label": "请求超时（秒）",
+      "help": "搜索请求超时时间，单位秒。默认 30 秒。"
     }
   },
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "webSearch": {
+      "qwen": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "apiKey": {
             "type": ["string", "object"]
           },
-          "baseUrl": {
+          "model": {
             "type": "string"
+          },
+          "searchStrategy": {
+            "type": "string"
+          },
+          "forcedSearch": {
+            "type": "boolean"
+          },
+          "enableThinking": {
+            "type": "boolean"
+          },
+          "enableSearchExtension": {
+            "type": "boolean"
+          },
+          "enableSource": {
+            "type": "boolean"
+          },
+          "enableCitation": {
+            "type": "boolean"
+          },
+          "citationFormat": {
+            "type": "string"
+          },
+          "freshness": {
+            "type": "number"
           },
           "timeoutSeconds": {
             "type": "number"

@@ -1,8 +1,4 @@
 # openclaw-web-search 开发指南
-
-> **本文件是 AI 代理（Cursor / Codex / Claude 等）的上下文指引文件。**
-> 人类开发者请参阅 [README.md](./README.md) 和 [docs/开发最佳实践.md](./docs/开发最佳实践.md)。
-
 ## 项目定位
 
 `openclaw-web-search` 是 [OpenClaw](https://github.com/openclaw/openclaw) 的**独立外部插件**，专注于为 OpenClaw 扩展国产模型内置搜索及第三方搜索服务的接入能力。
@@ -32,19 +28,30 @@ openclaw-web-search/
   README.md              ← 用户文档
   package.json
   tsconfig.json
+  vitest.config.ts       ← Vitest 测试配置
   openclaw.plugin.json   ← 插件 manifest
-  index.ts               ← 插件注册入口（只做注册）
+  index.ts               ← 插件注册入口（遍历注册所有 Provider）
   openspec/
     config.yaml          ← OpenSpec 工作流配置
   src/
-    provider.ts          ← WebSearchProviderPlugin 实现（当前为骨架）
-    providers/           ← （待创建）各搜索提供商子模块
-      metaso/            ← 秘塔搜索
-      qwen/              ← 千问/通义千问
-      doubao/            ← 豆包
-      zhipu/             ← 智普
+    provider.ts          ← Provider 注册中心（导出 getAllProviders()）
+    providers/
+      shared/            ← 可复用的共享基础设施
+        types.ts         ← 共享类型定义（ProviderConfig、DashScopeResponse 等）
+        config.ts        ← 通用凭据解析链、配置合并工具
+        errors.ts        ← 标准化错误返回构建器
+        schema.ts        ← Tool Schema 构建器
+        index.ts         ← 共享模块统一导出
+        shared.test.ts   ← 共享模块单元测试
+      qwen/              ← 通义百炼（DashScope 原生协议）
+        qwen-provider.ts ← Provider 完整实现
+        qwen.test.ts     ← 单元测试
+      metaso/            ← 秘塔搜索（待实现）
+      doubao/            ← 豆包（待实现）
+      zhipu/             ← 智普（待实现）
   docs/
     开发最佳实践.md
+    dashscope-qwen搜索curl示例.md
 ```
 
 ---
@@ -57,13 +64,18 @@ openclaw-web-search/
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import {
   buildSearchCacheKey,
+  getScopedCredentialValue,
+  mergeScopedSearchConfig,
   readCachedSearchPayload,
   readConfiguredSecretString,
   readNumberParam,
   readProviderEnvValue,
   readStringParam,
+  resolveProviderWebSearchPluginConfig,
   resolveSearchCacheTtlMs,
   resolveSearchTimeoutSeconds,
+  setProviderWebSearchPluginConfigValue,
+  setScopedCredentialValue,
   withTrustedWebSearchEndpoint,
   wrapWebContent,
   writeCachedSearchPayload,
@@ -126,17 +138,17 @@ import {
 
 ## 配置键约定
 
-每个 provider 在 `tools.web.search` 下有独立 scoped key：
+每个 provider 在 `plugins.entries.openclaw-web-search.config` 下有独立 scoped key，同时在 `tools.web.search` 下保持旧式兼容：
 
-| Provider | scoped key | 环境变量 |
-|---|---|---|
-| 秘塔搜索 | `metaso` | `METASO_API_KEY` |
-| 千问搜索 | `qwen` / `openaiSearch` | `DASHSCOPE_API_KEY` |
-| 豆包 | `doubao` | `DOUBAO_API_KEY` / `ARK_API_KEY` |
-| 智普搜索 | `zhipu` | `ZHIPU_API_KEY` |
+| Provider | provider id | scoped key | 环境变量 | 状态 |
+|---|---|---|---|---|
+| 通义百炼 | `qwen-dashscope` | `qwen` | `DASHSCOPE_API_KEY` | 已实现 |
+| 秘塔搜索 | `metaso` | `metaso` | `METASO_API_KEY` | 待实现 |
+| 豆包 | `doubao` | `doubao` | `DOUBAO_API_KEY` / `ARK_API_KEY` | 待实现 |
+| 智普搜索 | `zhipu` | `zhipu` | `ZHIPU_API_KEY` | 待实现 |
 
 凭据优先级（从高到低）：
-1. `plugins.entries.openclaw-web-search.config.webSearch.apiKey`（插件配置）
+1. `plugins.entries.openclaw-web-search.config.{scopeKey}.apiKey`（插件配置）
 2. `tools.web.search.{scopeKey}.apiKey`（旧式配置）
 3. 对应环境变量
 
@@ -171,6 +183,9 @@ npm install
 
 # 类型检查
 npm run check
+
+# 运行测试
+npm test
 
 # 本地联调
 cd /path/to/openclaw
