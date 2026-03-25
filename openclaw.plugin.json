@@ -1,0 +1,45 @@
+{
+  "id": "openclaw-web-search",
+  "name": "OpenClaw Web Search",
+  "description": "Independent external web_search plugin for OpenClaw",
+  "providerAuthEnvVars": {
+    "openclaw-web-search": ["OPENCLAW_WEB_SEARCH_API_KEY"]
+  },
+  "uiHints": {
+    "webSearch.apiKey": {
+      "label": "Web Search API Key",
+      "help": "外部 web_search 服务的 API Key。也可通过 OPENCLAW_WEB_SEARCH_API_KEY 提供。",
+      "sensitive": true,
+      "placeholder": "ws_..."
+    },
+    "webSearch.baseUrl": {
+      "label": "Base URL",
+      "help": "外部 web_search 服务地址，默认使用占位示例地址。"
+    },
+    "webSearch.timeoutSeconds": {
+      "label": "Timeout Seconds",
+      "help": "请求超时时间，单位秒。"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "webSearch": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "apiKey": {
+            "type": ["string", "object"]
+          },
+          "baseUrl": {
+            "type": "string"
+          },
+          "timeoutSeconds": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

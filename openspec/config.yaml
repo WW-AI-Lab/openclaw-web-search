@@ -1,0 +1,56 @@
+schema: spec-driven
+
+# 项目上下文（AI 创建提案时的背景信息）
+context: |
+  项目：openclaw-web-search
+  定位：OpenClaw 的独立外部插件，扩展支持国产模型内置搜索及第三方搜索服务。
+  npm 包：@ww-ai-lab/openclaw-web-search
+  GitHub：https://github.com/WW-AI-Lab/openclaw-web-search
+
+  技术栈：
+  - 语言：TypeScript (ESM)，Node.js 22+
+  - 插件 SDK：openclaw/plugin-sdk/plugin-entry、openclaw/plugin-sdk/provider-web-search
+  - 测试：Vitest
+  - 包管理：npm（主仓库用 pnpm，本插件用 npm）
+
+  目标搜索提供商（按字母序）：
+  - 豆包（ByteDance Doubao / 火山引擎 ARK）
+  - 千问搜索（Qwen / DashScope）
+  - 秘塔搜索（Metaso）
+  - 智普搜索（Zhipu AI / GLM）
+
+  核心开发规范：
+  - 只能通过 openclaw/plugin-sdk/* 公开路径接入 SDK，禁止 import 主仓库 src/** 私有路径
+  - HTTP 请求必须通过 withTrustedWebSearchEndpoint 发送
+  - 外部内容返回前必须用 wrapWebContent() 包裹
+  - 缓存 key 中禁止纳入 API key
+  - 每个 provider 必须实现凭据缺失时的结构化错误返回（不能抛出异常）
+
+  当前状态：
+  - 插件骨架已就绪（index.ts + src/provider.ts 占位实现）
+  - 各 provider 子模块尚未实现
+
+# 提案与 Spec 规则
+rules:
+  proposal:
+    - 标题必须简洁，用中文描述要做什么（例如：「接入秘塔搜索 Provider」）
+    - 必须包含「目标」、「范围」、「不做什么（Out of Scope）」三个小节
+    - 必须用中文列出关键业务场景与期望结果（每个场景一行）
+    - 如涉及新 Provider，必须说明：API 端点、认证方式、搜索参数、响应结构归一化方式
+    - 如修改 openclaw.plugin.json 的 configSchema 或 uiHints，必须在提案中列出变更字段
+    - 提案正文全部使用中文，技术术语可夹带英文
+
+  spec:
+    - Spec 必须用中文撰写
+    - 必须包含：接口定义 / 配置键约定 / 错误码说明
+    - 每个 Provider 的 Spec 必须单独成文
+
+  tasks:
+    - 任务拆分粒度：单个任务预计工作量不超过 2 小时
+    - 每个任务描述用中文，格式：「[模块] 操作描述」（例如：「[metaso] 实现 API 请求与响应归一化」）
+    - 测试任务必须与实现任务配对（不可只有实现没有测试）
+
+  change:
+    - 变更说明（change description）必须用中文
+    - 必须注明：现象/需求、正确期望行为、本次实现方式
+    - Bug 修复类变更额外注明：根本原因（root cause）
