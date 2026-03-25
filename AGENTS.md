@@ -142,7 +142,7 @@ import {
 
 | Provider | provider id | scoped key | 环境变量 | 状态 |
 |---|---|---|---|---|
-| 通义百炼 | `qwen-dashscope` | `qwen` | `DASHSCOPE_API_KEY` | 已实现 |
+| 通义百炼 | `qwen` | `qwen` | `DASHSCOPE_API_KEY` | 已实现 |
 | 秘塔搜索 | `metaso` | `metaso` | `METASO_API_KEY` | 待实现 |
 | 豆包 | `doubao` | `doubao` | `DOUBAO_API_KEY` / `ARK_API_KEY` | 待实现 |
 | 智普搜索 | `zhipu` | `zhipu` | `ZHIPU_API_KEY` | 待实现 |

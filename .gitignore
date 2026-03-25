@@ -43,3 +43,12 @@ yarn-error.log*
 
 # OpenSpec 本地覆盖（如果有）
 openspec/.local/
+
+# 本地流程与文档目录（保留文件，仅忽略 Git）
+docs/
+openspec/
+.github/
+.claude/
+.codex/
+.cursor/
+.npm-cache/

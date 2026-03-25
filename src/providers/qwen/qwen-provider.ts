@@ -4,10 +4,8 @@ import {
   mergeScopedSearchConfig,
   readCachedSearchPayload,
   readStringParam,
-  resolveProviderWebSearchPluginConfig,
   resolveSearchCacheTtlMs,
   resolveSearchTimeoutSeconds,
-  setProviderWebSearchPluginConfigValue,
   setScopedCredentialValue,
   withTrustedWebSearchEndpoint,
   wrapWebContent,
@@ -27,9 +25,21 @@ import {
   type ProviderConfig,
 } from "../shared/index.js";
 
+// ── 辅助 ──
+
+function ensureRecord(target: Record<string, unknown>, key: string): Record<string, unknown> {
+  const current = target[key];
+  if (current && typeof current === "object" && !Array.isArray(current)) {
+    return current as Record<string, unknown>;
+  }
+  const next: Record<string, unknown> = {};
+  target[key] = next;
+  return next;
+}
+
 // ── 常量 ──
 
-const PROVIDER_ID = "qwen-dashscope";
+const PROVIDER_ID = "qwen";
 const PLUGIN_ID = "openclaw-web-search";
 const SCOPE_KEY = "qwen";
 const ENV_VARS = ["DASHSCOPE_API_KEY"];
@@ -63,6 +73,21 @@ function resolveQwenConfig(searchConfig?: SearchConfigRecord): QwenProviderConfi
   return scoped && typeof scoped === "object" && !Array.isArray(scoped)
     ? (scoped as QwenProviderConfig)
     : {};
+}
+
+function resolvePluginScopedConfig(
+  config: Record<string, unknown> | undefined,
+): Record<string, unknown> | undefined {
+  if (!config) return undefined;
+  const entries = config.plugins as Record<string, unknown> | undefined;
+  const pluginEntries = entries?.entries as Record<string, unknown> | undefined;
+  const pluginEntry = pluginEntries?.[PLUGIN_ID] as Record<string, unknown> | undefined;
+  const pluginConfig = pluginEntry?.config as Record<string, unknown> | undefined;
+  const scopedConfig = pluginConfig?.[SCOPE_KEY];
+  if (scopedConfig && typeof scopedConfig === "object" && !Array.isArray(scopedConfig)) {
+    return scopedConfig as Record<string, unknown>;
+  }
+  return undefined;
 }
 
 function resolveApiKey(config: QwenProviderConfig): string | undefined {
@@ -231,46 +256,56 @@ function createToolDefinition(
 
       const start = Date.now();
 
-      const payload: SearchToolResult = await withTrustedWebSearchEndpoint(
-        {
-          url: DASHSCOPE_ENDPOINT,
-          timeoutSeconds,
-          init: {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+      let payload: SearchToolResult;
+      try {
+        payload = await withTrustedWebSearchEndpoint(
+          {
+            url: DASHSCOPE_ENDPOINT,
+            timeoutSeconds,
+            init: {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify(body),
             },
-            body: JSON.stringify(body),
           },
-        },
-        async (res) => {
-          if (!res.ok) {
-            const detail = await res.text();
-            return buildDashScopeApiError(PROVIDER_ID, res.status, detail) as never;
-          }
+          async (res) => {
+            if (!res.ok) {
+              const detail = await res.text();
+              return buildDashScopeApiError(PROVIDER_ID, res.status, detail) as never;
+            }
 
-          const data = (await res.json()) as DashScopeResponse;
-          const content =
-            data.output?.choices?.[0]?.message?.content?.trim() || "未返回搜索结果。";
-          const citations = extractCitations(data);
+            const data = (await res.json()) as DashScopeResponse;
+            const content =
+              data.output?.choices?.[0]?.message?.content?.trim() || "未返回搜索结果。";
+            const citations = extractCitations(data);
 
-          return {
-            query,
-            provider: PROVIDER_ID,
-            model,
-            tookMs: Date.now() - start,
-            externalContent: {
-              untrusted: true as const,
-              source: "web_search" as const,
+            return {
+              query,
               provider: PROVIDER_ID,
-              wrapped: true as const,
-            },
-            content: wrapWebContent(content),
-            citations,
-          };
-        },
-      );
+              model,
+              tookMs: Date.now() - start,
+              externalContent: {
+                untrusted: true as const,
+                source: "web_search" as const,
+                provider: PROVIDER_ID,
+                wrapped: true as const,
+              },
+              content: wrapWebContent(content),
+              citations,
+            };
+          },
+        );
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const cause = err instanceof Error && err.cause ? String(err.cause) : "";
+        const stack = err instanceof Error ? err.stack : "";
+        console.error(`[qwen] fetch error: ${msg}${cause ? ` cause=${cause}` : ""}`);
+        if (stack) console.error(`[qwen] stack: ${stack}`);
+        throw err;
+      }
 
       writeCachedSearchPayload(cacheKey, payload, resolveSearchCacheTtlMs(searchConfig));
       return payload;
@@ -280,11 +315,11 @@ function createToolDefinition(
 
 // ── Provider Plugin 实例 ──
 
-export function createQwenDashScopeProvider(): WebSearchProviderPlugin {
+export function createQwenProvider(): WebSearchProviderPlugin {
   return {
     id: PROVIDER_ID,
-    label: "通义百炼搜索 (DashScope)",
-    hint: "通过阿里云百炼平台 DashScope 原生协议实现联网搜索，支持搜索来源返回与角标标注",
+    label: "Qwen (DashScope)",
+    hint: "Requires DashScope API key · Qwen web search via DashScope native protocol",
     envVars: ENV_VARS,
     placeholder: "sk-...",
     signupUrl: "https://dashscope.aliyun.com/",
@@ -300,17 +335,27 @@ export function createQwenDashScopeProvider(): WebSearchProviderPlugin {
       setScopedCredentialValue(searchConfigTarget, SCOPE_KEY, value),
 
     getConfiguredCredentialValue: (config) =>
-      resolveProviderWebSearchPluginConfig(config, PLUGIN_ID)?.apiKey,
+      resolvePluginScopedConfig(config as Record<string, unknown> | undefined)?.apiKey,
 
     setConfiguredCredentialValue: (configTarget, value) => {
-      setProviderWebSearchPluginConfigValue(configTarget, PLUGIN_ID, "apiKey", value);
+      const root = configTarget as Record<string, unknown>;
+      const plugins = ensureRecord(root, "plugins");
+      const entries = ensureRecord(plugins, "entries");
+      const entry = ensureRecord(entries, PLUGIN_ID);
+      if (entry.enabled === undefined) {
+        entry.enabled = true;
+      }
+      const config = ensureRecord(entry, "config");
+      const scoped = ensureRecord(config, SCOPE_KEY);
+      scoped.apiKey = value;
     },
 
     createTool: (ctx) =>
       createToolDefinition(
         (() => {
           const searchConfig = ctx.searchConfig as SearchConfigRecord | undefined;
-          const pluginConfig = resolveProviderWebSearchPluginConfig(ctx.config, PLUGIN_ID);
+          const rawConfig = ctx.config as Record<string, unknown> | undefined;
+          const pluginConfig = resolvePluginScopedConfig(rawConfig);
           if (!pluginConfig) {
             return searchConfig;
           }

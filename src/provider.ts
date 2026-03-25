@@ -1,6 +1,6 @@
 import type { WebSearchProviderPlugin } from "openclaw/plugin-sdk/provider-web-search";
 
-import { createQwenDashScopeProvider } from "./providers/qwen/qwen-provider.js";
+import { createQwenProvider } from "./providers/qwen/qwen-provider.js";
 
 /**
  * 返回本插件提供的所有搜索 Provider
@@ -8,6 +8,6 @@ import { createQwenDashScopeProvider } from "./providers/qwen/qwen-provider.js";
  */
 export function getAllProviders(): WebSearchProviderPlugin[] {
   return [
-    createQwenDashScopeProvider(),
+    createQwenProvider(),
   ];
 }

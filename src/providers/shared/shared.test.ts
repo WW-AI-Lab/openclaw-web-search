@@ -66,23 +66,23 @@ describe("resolveCredential", () => {
 describe("buildMissingKeyError", () => {
   it("should produce correct error id with hyphen-to-underscore replacement", () => {
     const err = buildMissingKeyError(
-      "qwen-dashscope",
+      "qwen",
       "DASHSCOPE_API_KEY",
       "plugins.entries.openclaw-web-search.config.qwen.apiKey",
     );
-    expect(err.error).toBe("missing_qwen_dashscope_api_key");
-    expect(err.message).toContain("qwen-dashscope");
+    expect(err.error).toBe("missing_qwen_api_key");
+    expect(err.message).toContain("qwen");
     expect(err.message).toContain("DASHSCOPE_API_KEY");
     expect(err.message).toContain("plugins.entries.openclaw-web-search.config.qwen.apiKey");
   });
 
   it("should include docs url when provided", () => {
-    const err = buildMissingKeyError("qwen-dashscope", "DASHSCOPE_API_KEY", "config.path", "https://docs.example.com");
+    const err = buildMissingKeyError("qwen", "DASHSCOPE_API_KEY", "config.path", "https://docs.example.com");
     expect(err.docs).toBe("https://docs.example.com");
   });
 
   it("should omit docs when not provided", () => {
-    const err = buildMissingKeyError("qwen-dashscope", "DASHSCOPE_API_KEY", "config.path");
+    const err = buildMissingKeyError("qwen", "DASHSCOPE_API_KEY", "config.path");
     expect(err.docs).toBeUndefined();
   });
 });
@@ -91,15 +91,15 @@ describe("buildMissingKeyError", () => {
 
 describe("buildApiError", () => {
   it("should produce correct error id and include status", () => {
-    const err = buildApiError("qwen-dashscope", 401, "Unauthorized");
-    expect(err.error).toBe("qwen_dashscope_api_error");
+    const err = buildApiError("qwen", 401, "Unauthorized");
+    expect(err.error).toBe("qwen_api_error");
     expect(err.status).toBe(401);
     expect(err.message).toContain("401");
     expect(err.message).toContain("Unauthorized");
   });
 
   it("should not contain API key in message", () => {
-    const err = buildApiError("qwen-dashscope", 500, "Internal Server Error");
+    const err = buildApiError("qwen", 500, "Internal Server Error");
     expect(err.message).not.toContain("sk-");
   });
 });
@@ -113,8 +113,8 @@ describe("buildDashScopeApiError", () => {
       message: "Invalid API-key provided.",
       request_id: "abc123",
     });
-    const err = buildDashScopeApiError("qwen-dashscope", 401, body);
-    expect(err.error).toBe("qwen_dashscope_api_error");
+    const err = buildDashScopeApiError("qwen", 401, body);
+    expect(err.error).toBe("qwen_api_error");
     expect(err.dashscope_code).toBe("InvalidApiKey");
     expect(err.request_id).toBe("abc123");
     expect(err.message).toContain("InvalidApiKey");
@@ -123,8 +123,8 @@ describe("buildDashScopeApiError", () => {
   });
 
   it("should fallback to generic error when body is not valid JSON", () => {
-    const err = buildDashScopeApiError("qwen-dashscope", 500, "not json");
-    expect(err.error).toBe("qwen_dashscope_api_error");
+    const err = buildDashScopeApiError("qwen", 500, "not json");
+    expect(err.error).toBe("qwen_api_error");
     expect(err.status).toBe(500);
     expect(err.dashscope_code).toBeUndefined();
     expect(err.message).toContain("not json");
@@ -132,7 +132,7 @@ describe("buildDashScopeApiError", () => {
 
   it("should fallback when JSON has no code field", () => {
     const body = JSON.stringify({ error: "something went wrong" });
-    const err = buildDashScopeApiError("qwen-dashscope", 502, body);
+    const err = buildDashScopeApiError("qwen", 502, body);
     expect(err.dashscope_code).toBeUndefined();
   });
 });

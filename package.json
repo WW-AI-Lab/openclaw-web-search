@@ -1,15 +1,17 @@
 {
-  "name": "openclaw-web-search",
-  "version": "0.1.0",
-  "description": "Independent external web_search plugin for OpenClaw",
+  "name": "@ww-ai-lab/openclaw-web-search",
+  "version": "2026.3.25",
+  "description": "OpenClaw 的独立外部联网搜索插件，逐步适配国产大模型搜索服务",
   "type": "module",
   "private": false,
+  "license": "MIT",
   "files": [
     "index.ts",
     "src",
-    "docs",
     "openclaw.plugin.json",
     "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
     "tsconfig.json"
   ],
   "exports": {
@@ -25,6 +27,22 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/WW-AI-Lab/openclaw-web-search.git"
+  },
+  "homepage": "https://github.com/WW-AI-Lab/openclaw-web-search#readme",
+  "bugs": {
+    "url": "https://github.com/WW-AI-Lab/openclaw-web-search/issues"
+  },
+  "keywords": [
+    "openclaw",
+    "plugin",
+    "web-search",
+    "qwen",
+    "dashscope",
+    "国产大模型"
+  ],
   "peerDependencies": {
     "openclaw": ">=2026.3.22"
   },

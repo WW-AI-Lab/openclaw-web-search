@@ -1,9 +1,9 @@
 {
   "id": "openclaw-web-search",
-  "name": "OpenClaw Web Search",
-  "description": "Independent external web_search plugin for OpenClaw",
+  "name": "OpenClaw 国产联网搜索插件",
+  "description": "为 OpenClaw 提供国产大模型与第三方联网搜索服务的独立外部插件",
   "providerAuthEnvVars": {
-    "qwen-dashscope": ["DASHSCOPE_API_KEY"]
+    "qwen": ["DASHSCOPE_API_KEY"]
   },
   "uiHints": {
     "qwen.apiKey": {

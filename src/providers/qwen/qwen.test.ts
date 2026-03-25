@@ -36,7 +36,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("openclaw/plugin-sdk/provider-web-search", () => mocks);
 
-import { createQwenDashScopeProvider, __testing } from "./qwen-provider.js";
+import { createQwenProvider, __testing } from "./qwen-provider.js";
 import type { DashScopeResponse } from "../shared/types.js";
 
 const {
@@ -69,18 +69,18 @@ describe("凭据缺失错误", () => {
   });
 
   it("should return structured error when API key is missing", async () => {
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({ searchConfig: undefined, config: undefined } as never);
     const result = await tool.execute({ query: "test" });
 
-    expect(result).toHaveProperty("error", "missing_qwen_dashscope_api_key");
+    expect(result).toHaveProperty("error", "missing_qwen_api_key");
     expect(result).toHaveProperty("message");
     expect((result as Record<string, unknown>).message).toContain("DASHSCOPE_API_KEY");
     expect(mocks.withTrustedWebSearchEndpoint).not.toHaveBeenCalled();
   });
 
   it("should not throw an exception when API key is missing", async () => {
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({ searchConfig: undefined, config: undefined } as never);
     await expect(tool.execute({ query: "test" })).resolves.toBeDefined();
   });
@@ -102,7 +102,7 @@ describe("query 参数校验", () => {
       },
     );
 
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({
       searchConfig: { qwen: { apiKey: "sk-test" } },
       config: undefined,
@@ -286,7 +286,7 @@ describe("响应归一化", () => {
       },
     );
 
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({
       searchConfig: { qwen: { apiKey: "sk-test" } },
       config: undefined,
@@ -318,7 +318,7 @@ describe("缓存命中", () => {
     };
     mocks.readCachedSearchPayload.mockReturnValue(cachedResult);
 
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({
       searchConfig: { qwen: { apiKey: "sk-test" } },
       config: undefined,
@@ -367,14 +367,14 @@ describe("非 2xx 响应", () => {
       },
     );
 
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({
       searchConfig: { qwen: { apiKey: "sk-test-key" } },
       config: undefined,
     } as never);
 
     const result = await tool.execute({ query: "test" }) as Record<string, unknown>;
-    expect(result.error).toBe("qwen_dashscope_api_error");
+    expect(result.error).toBe("qwen_api_error");
     expect(result.dashscope_code).toBe("InvalidApiKey");
     expect(result.request_id).toBe("req-err-1");
     expect(result.status).toBe(401);
@@ -387,14 +387,14 @@ describe("非 2xx 响应", () => {
       },
     );
 
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({
       searchConfig: { qwen: { apiKey: "sk-test-key" } },
       config: undefined,
     } as never);
 
     const result = await tool.execute({ query: "test" }) as Record<string, unknown>;
-    expect(result.error).toBe("qwen_dashscope_api_error");
+    expect(result.error).toBe("qwen_api_error");
     expect(result.status).toBe(500);
     expect(result.dashscope_code).toBeUndefined();
   });
@@ -406,7 +406,7 @@ describe("非 2xx 响应", () => {
       },
     );
 
-    const provider = createQwenDashScopeProvider();
+    const provider = createQwenProvider();
     const tool = provider.createTool({
       searchConfig: { qwen: { apiKey: "sk-test-key" } },
       config: undefined,
@@ -478,9 +478,9 @@ describe("搜索来源 fallback", () => {
 
 describe("Provider 元信息", () => {
   it("should have correct id and metadata", () => {
-    const provider = createQwenDashScopeProvider();
-    expect(provider.id).toBe("qwen-dashscope");
-    expect(provider.label).toBe("通义百炼搜索 (DashScope)");
+    const provider = createQwenProvider();
+    expect(provider.id).toBe("qwen");
+    expect(provider.label).toBe("Qwen (DashScope)");
     expect(provider.envVars).toEqual(["DASHSCOPE_API_KEY"]);
     expect(provider.placeholder).toBe("sk-...");
     expect(provider.signupUrl).toBe("https://dashscope.aliyun.com/");
