@@ -38,8 +38,8 @@
 
 本项目按“先打通一条稳定可用线路，再逐步扩展国产搜索 Provider”的方式推进：
 
-1. 第一阶段：完成 Qwen（DashScope 原生协议）接入，验证插件配置、缓存、错误处理、引用输出、npm 发布链路。
-2. 第二阶段：完成 Metaso 接入，统一插件配置、旧式配置与环境变量凭据解析链。
+1. ✅ 第一阶段：完成 Qwen（DashScope 原生协议）接入，验证插件配置、缓存、错误处理、引用输出、npm 发布链路。（已发布 v2026.3.25）
+2. ✅ 第二阶段：完成 Metaso 接入，支持 `search` / `reader` / `deep_research` 三种模式，修复 `webpages` 响应解析与插件加载兼容性。（已发布 v2026.3.30）
 3. 第三阶段：增加豆包 / ARK 与智普搜索，继续补充响应归一化测试。
 4. 第四阶段：抽象更多共享基础设施，兼容更多可接入的搜索服务。
 5. 第五阶段：完善 Provider 选择策略、文档、示例与自动化发布流程。
@@ -245,6 +245,30 @@ Metaso 的凭据优先级从高到低如下：
 ```
 
 提示：真实联调时建议仅通过环境变量注入 `METASO_API_KEY`，不要把秘钥写入仓库配置文件。
+
+## 已知问题与故障排除
+
+### 插件加载后找不到 `@sinclair/typebox`
+
+在某些 OpenClaw 本地安装环境下，插件加载时可能报错 `Cannot find package '@sinclair/typebox'`。这是因为 OpenClaw 将该依赖内置在主包里，未向外暴露。
+
+临时修复方法：创建 symlink 将插件的依赖路径指向 OpenClaw 内置的 typebox：
+
+```bash
+mkdir -p ~/.openclaw/extensions/openclaw-web-search/node_modules/@sinclair
+ln -sf /opt/homebrew/lib/node_modules/openclaw/node_modules/@sinclair/typebox \
+  ~/.openclaw/extensions/openclaw-web-search/node_modules/@sinclair/typebox
+```
+
+> 注：`/opt/homebrew/lib/node_modules/openclaw` 是 homebrew 安装路径，可用 `realpath $(which openclaw)` 推断实际位置。
+
+### 搜索返回"未返回搜索结果"
+
+如果 Metaso 始终返回空结果，请检查：
+
+- `plugins.entries.openclaw-web-search.config.metaso.apiKey` 是否已正确配置。
+- OpenClaw 配置中 `tools.web.search.provider` 是否设为 `metaso`。
+- 升级到最新包后执行 `openclaw gateway restart`，清除旧缓存后重新搜索。
 
 ## 开发与验证
 

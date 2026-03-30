@@ -1,0 +1,12 @@
+# 测试文件不应打入 npm 包
+**/*.test.ts
+vitest.config.ts
+
+# 开发文档与工作流文件
+docs/
+openspec/
+.github/
+.claude/
+.codex/
+.cursor/
+AGENTS.md
