@@ -47,7 +47,6 @@ openspec/.local/
 
 # 本地流程与文档目录（保留文件，仅忽略 Git）
 docs/
-.github/
 .claude/
 .codex/
 .cursor/
