@@ -9,6 +9,7 @@ dist-runtime/
 *.js.map
 *.d.ts
 *.tsbuildinfo
+node_modules/
 
 # 环境与凭据（绝不提交）
 .env
@@ -46,7 +47,6 @@ openspec/.local/
 
 # 本地流程与文档目录（保留文件，仅忽略 Git）
 docs/
-openspec/
 .github/
 .claude/
 .codex/

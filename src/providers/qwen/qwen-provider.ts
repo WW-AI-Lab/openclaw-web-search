@@ -20,22 +20,13 @@ import {
   buildMissingKeyError,
   buildDashScopeApiError,
   buildSearchToolSchema,
+  extractUrlsFromText,
+  resolvePluginScopedConfig,
+  setPluginScopedConfigValue,
   type DashScopeResponse,
   type SearchToolResult,
   type ProviderConfig,
 } from "../shared/index.js";
-
-// ── 辅助 ──
-
-function ensureRecord(target: Record<string, unknown>, key: string): Record<string, unknown> {
-  const current = target[key];
-  if (current && typeof current === "object" && !Array.isArray(current)) {
-    return current as Record<string, unknown>;
-  }
-  const next: Record<string, unknown> = {};
-  target[key] = next;
-  return next;
-}
 
 // ── 常量 ──
 
@@ -75,21 +66,6 @@ function resolveQwenConfig(searchConfig?: SearchConfigRecord): QwenProviderConfi
     : {};
 }
 
-function resolvePluginScopedConfig(
-  config: Record<string, unknown> | undefined,
-): Record<string, unknown> | undefined {
-  if (!config) return undefined;
-  const entries = config.plugins as Record<string, unknown> | undefined;
-  const pluginEntries = entries?.entries as Record<string, unknown> | undefined;
-  const pluginEntry = pluginEntries?.[PLUGIN_ID] as Record<string, unknown> | undefined;
-  const pluginConfig = pluginEntry?.config as Record<string, unknown> | undefined;
-  const scopedConfig = pluginConfig?.[SCOPE_KEY];
-  if (scopedConfig && typeof scopedConfig === "object" && !Array.isArray(scopedConfig)) {
-    return scopedConfig as Record<string, unknown>;
-  }
-  return undefined;
-}
-
 function resolveApiKey(config: QwenProviderConfig): string | undefined {
   return resolveCredential(config.apiKey, SECRET_PATH, ENV_VARS);
 }
@@ -126,9 +102,8 @@ function extractCitations(data: DashScopeResponse): string[] {
 
   const content = data.output?.choices?.[0]?.message?.content;
   if (content) {
-    const urlPattern = /https?:\/\/[^\s)<>\]"']+/g;
-    for (const match of content.matchAll(urlPattern)) {
-      urls.add(match[0]);
+    for (const url of extractUrlsFromText(content)) {
+      urls.add(url);
     }
   }
 
@@ -202,7 +177,7 @@ function buildCacheKeyFactors(
   query: string,
   model: string,
   config: QwenProviderConfig,
-): (string | number | boolean | undefined)[] {
+): (string | number | boolean)[] {
   return [
     PROVIDER_ID,
     query,
@@ -211,7 +186,7 @@ function buildCacheKeyFactors(
     config.forcedSearch ?? false,
     config.enableThinking ?? false,
     config.enableSearchExtension ?? false,
-    config.freshness ?? undefined,
+    config.freshness ?? -1,
     config.enableSource ?? true,
     config.enableCitation ?? false,
   ];
@@ -335,19 +310,17 @@ export function createQwenProvider(): WebSearchProviderPlugin {
       setScopedCredentialValue(searchConfigTarget, SCOPE_KEY, value),
 
     getConfiguredCredentialValue: (config) =>
-      resolvePluginScopedConfig(config as Record<string, unknown> | undefined)?.apiKey,
+      resolvePluginScopedConfig(config as Record<string, unknown> | undefined, PLUGIN_ID, SCOPE_KEY)
+        ?.apiKey,
 
     setConfiguredCredentialValue: (configTarget, value) => {
-      const root = configTarget as Record<string, unknown>;
-      const plugins = ensureRecord(root, "plugins");
-      const entries = ensureRecord(plugins, "entries");
-      const entry = ensureRecord(entries, PLUGIN_ID);
-      if (entry.enabled === undefined) {
-        entry.enabled = true;
-      }
-      const config = ensureRecord(entry, "config");
-      const scoped = ensureRecord(config, SCOPE_KEY);
-      scoped.apiKey = value;
+      setPluginScopedConfigValue(
+        configTarget as Record<string, unknown>,
+        PLUGIN_ID,
+        SCOPE_KEY,
+        "apiKey",
+        value,
+      );
     },
 
     createTool: (ctx) =>
@@ -355,7 +328,7 @@ export function createQwenProvider(): WebSearchProviderPlugin {
         (() => {
           const searchConfig = ctx.searchConfig as SearchConfigRecord | undefined;
           const rawConfig = ctx.config as Record<string, unknown> | undefined;
-          const pluginConfig = resolvePluginScopedConfig(rawConfig);
+          const pluginConfig = resolvePluginScopedConfig(rawConfig, PLUGIN_ID, SCOPE_KEY);
           if (!pluginConfig) {
             return searchConfig;
           }

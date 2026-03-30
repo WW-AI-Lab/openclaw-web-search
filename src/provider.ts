@@ -1,5 +1,6 @@
 import type { WebSearchProviderPlugin } from "openclaw/plugin-sdk/provider-web-search";
 
+import { createMetasoProvider } from "./providers/metaso/metaso-provider.js";
 import { createQwenProvider } from "./providers/qwen/qwen-provider.js";
 
 /**
@@ -9,5 +10,6 @@ import { createQwenProvider } from "./providers/qwen/qwen-provider.js";
 export function getAllProviders(): WebSearchProviderPlugin[] {
   return [
     createQwenProvider(),
+    createMetasoProvider(),
   ];
 }

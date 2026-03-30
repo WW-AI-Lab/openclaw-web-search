@@ -2,8 +2,12 @@
   "id": "openclaw-web-search",
   "name": "OpenClaw 国产联网搜索插件",
   "description": "为 OpenClaw 提供国产大模型与第三方联网搜索服务的独立外部插件",
+  "contracts": {
+    "webSearchProviders": ["qwen", "metaso"]
+  },
   "providerAuthEnvVars": {
-    "qwen": ["DASHSCOPE_API_KEY"]
+    "qwen": ["DASHSCOPE_API_KEY"],
+    "metaso": ["METASO_API_KEY"]
   },
   "uiHints": {
     "qwen.apiKey": {
@@ -51,6 +55,44 @@
     "qwen.timeoutSeconds": {
       "label": "请求超时（秒）",
       "help": "搜索请求超时时间，单位秒。默认 30 秒。"
+    },
+    "metaso.apiKey": {
+      "label": "Metaso API Key",
+      "help": "秘塔搜索 API Key。也可通过环境变量 METASO_API_KEY 提供。",
+      "sensitive": true,
+      "placeholder": "mk-..."
+    },
+    "metaso.mode": {
+      "label": "默认模式",
+      "help": "默认执行模式，可选 search、reader、deep_research。未在工具调用中指定时使用该值。"
+    },
+    "metaso.scope": {
+      "label": "搜索范围",
+      "help": "简单搜索模式的默认 scope，建议使用 webpage。"
+    },
+    "metaso.size": {
+      "label": "结果数量",
+      "help": "简单搜索模式默认返回条数，默认 10。"
+    },
+    "metaso.includeSummary": {
+      "label": "返回摘要",
+      "help": "简单搜索模式是否请求服务端摘要，默认开启。"
+    },
+    "metaso.includeRawContent": {
+      "label": "返回原文",
+      "help": "简单搜索模式是否附带原始网页正文，默认关闭。"
+    },
+    "metaso.conciseSnippet": {
+      "label": "简洁片段",
+      "help": "简单搜索模式是否请求更简洁的结果片段，默认关闭。"
+    },
+    "metaso.deepResearchModel": {
+      "label": "深度研究模型",
+      "help": "深度研究模式默认模型，可选 fast、fast_thinking、ds-r1。默认 fast_thinking。"
+    },
+    "metaso.timeoutSeconds": {
+      "label": "请求超时（秒）",
+      "help": "Metaso 请求超时时间，单位秒。默认 30 秒。"
     }
   },
   "configSchema": {
@@ -90,6 +132,39 @@
           },
           "freshness": {
             "type": "number"
+          },
+          "timeoutSeconds": {
+            "type": "number"
+          }
+        }
+      },
+      "metaso": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "apiKey": {
+            "type": ["string", "object"]
+          },
+          "mode": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "includeSummary": {
+            "type": "boolean"
+          },
+          "includeRawContent": {
+            "type": "boolean"
+          },
+          "conciseSnippet": {
+            "type": "boolean"
+          },
+          "deepResearchModel": {
+            "type": "string"
           },
           "timeoutSeconds": {
             "type": "number"

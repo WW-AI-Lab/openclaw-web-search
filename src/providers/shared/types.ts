@@ -32,6 +32,7 @@ export type SearchToolError = {
   message: string;
   status?: number;
   docs?: string;
+  provider_code?: string;
   dashscope_code?: string;
   request_id?: string;
 };

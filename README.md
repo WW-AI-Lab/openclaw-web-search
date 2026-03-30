@@ -29,8 +29,8 @@
 | 提供商 | provider id | 状态 | 说明 |
 |---|---|---|---|
 | 通义百炼（DashScope） | `qwen` | 已实现 | 走 DashScope 原生协议，支持结构化来源与引用角标 |
+| 秘塔搜索 | `metaso` | 已实现 | 支持简单搜索、网页读取和深度研究三种模式 |
 | 豆包 / 火山引擎 ARK | `doubao` | 规划中 | 接入豆包原生搜索或兼容线路 |
-| 秘塔搜索 | `metaso` | 规划中 | 适配秘塔搜索 API |
 | 智普 GLM 搜索 | `zhipu` | 规划中 | 接入智普原生 Web 搜索能力 |
 | 其他兼容接口的搜索服务 | `compatible` | 规划中 | 作为补充线路，适配更多可接入的搜索服务 |
 
@@ -39,8 +39,8 @@
 本项目按“先打通一条稳定可用线路，再逐步扩展国产搜索 Provider”的方式推进：
 
 1. 第一阶段：完成 Qwen（DashScope 原生协议）接入，验证插件配置、缓存、错误处理、引用输出、npm 发布链路。
-2. 第二阶段：增加豆包 / ARK 搜索适配，统一配置结构与凭据解析链。
-3. 第三阶段：增加秘塔搜索与智普搜索，补充更多响应归一化测试。
+2. 第二阶段：完成 Metaso 接入，统一插件配置、旧式配置与环境变量凭据解析链。
+3. 第三阶段：增加豆包 / ARK 与智普搜索，继续补充响应归一化测试。
 4. 第四阶段：抽象更多共享基础设施，兼容更多可接入的搜索服务。
 5. 第五阶段：完善 Provider 选择策略、文档、示例与自动化发布流程。
 
@@ -50,7 +50,7 @@
 
 | 依赖 | 要求 |
 |---|---|
-| OpenClaw | `>= 2026.3.22` |
+| OpenClaw | `>= 2026.3.28` |
 | Node.js | `>= 22` |
 
 ### 方式一：从 npm 安装
@@ -76,11 +76,11 @@ openclaw gateway restart
 
 ### 安装后检查
 
-如果 OpenClaw 已正确加载插件，应能在插件列表中看到 `openclaw-web-search`，并在配置中看到 `qwen` 相关字段。
+如果 OpenClaw 已正确加载插件，应能在插件列表中看到 `openclaw-web-search`，并在配置中看到 `qwen` 与 `metaso` 相关字段。
 
 ## 配置说明
 
-当前已实现的是 Qwen（DashScope 原生协议）线路，支持三种配置方式。
+当前已实现 Qwen 与 Metaso 两条线路，均支持三种配置方式。
 
 ### 方式一：插件配置，推荐
 
@@ -103,6 +103,17 @@ openclaw gateway restart
             citationFormat: "[<number>]",
             freshness: 30,
             timeoutSeconds: 30
+          },
+          metaso: {
+            apiKey: "mk-...",
+            mode: "search",
+            scope: "webpage",
+            size: 10,
+            includeSummary: true,
+            includeRawContent: false,
+            conciseSnippet: false,
+            deepResearchModel: "fast_thinking",
+            timeoutSeconds: 30
           }
         }
       }
@@ -120,6 +131,9 @@ openclaw gateway restart
       search: {
         qwen: {
           apiKey: "sk-..."
+        },
+        metaso: {
+          apiKey: "mk-..."
         }
       }
     }
@@ -131,6 +145,7 @@ openclaw gateway restart
 
 ```bash
 export DASHSCOPE_API_KEY="sk-..."
+export METASO_API_KEY="mk-..."
 ```
 
 凭据优先级从高到低如下：
@@ -138,6 +153,12 @@ export DASHSCOPE_API_KEY="sk-..."
 1. `plugins.entries.openclaw-web-search.config.qwen.apiKey`
 2. `tools.web.search.qwen.apiKey`
 3. `DASHSCOPE_API_KEY`
+
+Metaso 的凭据优先级从高到低如下：
+
+1. `plugins.entries.openclaw-web-search.config.metaso.apiKey`
+2. `tools.web.search.metaso.apiKey`
+3. `METASO_API_KEY`
 
 ## Qwen 配置项说明
 
@@ -170,6 +191,60 @@ export DASHSCOPE_API_KEY="sk-..."
 - `deepseek-r1`
 
 插件不会对模型名做强校验，以便兼容 DashScope 后续新增的模型。
+
+## Metaso 配置项说明
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `apiKey` | `string` | 无 | Metaso API Key |
+| `mode` | `string` | `search` | 默认模式，可选 `search`、`reader`、`deep_research` |
+| `scope` | `string` | `webpage` | `search` 模式下的范围参数 |
+| `size` | `number` | `10` | `search` 模式返回条数，范围 `1-10` |
+| `includeSummary` | `boolean` | `true` | 是否请求汇总摘要 |
+| `includeRawContent` | `boolean` | `false` | 是否请求原始正文 |
+| `conciseSnippet` | `boolean` | `false` | 是否请求更短的摘要片段 |
+| `deepResearchModel` | `string` | `fast_thinking` | `deep_research` 模式默认模型 |
+| `timeoutSeconds` | `number` | `30` | 请求超时时间，单位秒 |
+
+## Metaso 三种模式
+
+### 简单搜索 `search`
+
+适合通用 Web 搜索，输入 `query`，返回摘要、结果列表与 citations。
+
+```json5
+{
+  query: "OpenClaw 插件系统",
+  mode: "search",
+  size: 5,
+  includeSummary: true
+}
+```
+
+### 网页读取 `reader`
+
+适合对单个 URL 做正文提取，输入 `url`，返回包装后的纯文本正文与 URL citations。
+
+```json5
+{
+  mode: "reader",
+  url: "https://example.com/article"
+}
+```
+
+### 深度研究 `deep_research`
+
+适合复杂问题检索，输入 `query`，支持 `fast`、`fast_thinking`、`ds-r1` 三个模型，内部会聚合流式响应并提取 citations。
+
+```json5
+{
+  query: "比较不同 Agent 插件架构的优缺点",
+  mode: "deep_research",
+  model: "ds-r1"
+}
+```
+
+提示：真实联调时建议仅通过环境变量注入 `METASO_API_KEY`，不要把秘钥写入仓库配置文件。
 
 ## 开发与验证
 

@@ -1,6 +1,6 @@
 {
   "name": "@ww-ai-lab/openclaw-web-search",
-  "version": "2026.3.25",
+  "version": "2026.3.30",
   "description": "OpenClaw 的独立外部联网搜索插件，逐步适配国产大模型搜索服务",
   "type": "module",
   "private": false,
@@ -20,7 +20,21 @@
   "openclaw": {
     "extensions": [
       "./index.ts"
-    ]
+    ],
+    "compat": {
+      "pluginApi": ">=2026.3.28",
+      "minGatewayVersion": "2026.3.28"
+    },
+    "build": {
+      "openclawVersion": "2026.3.28",
+      "pluginSdkVersion": "2026.3.28"
+    },
+    "install": {
+      "minHostVersion": ">=2026.3.28"
+    },
+    "release": {
+      "publishToNpm": true
+    }
   },
   "scripts": {
     "check": "tsc --noEmit -p tsconfig.json",
@@ -40,6 +54,7 @@
     "plugin",
     "web-search",
     "qwen",
+    "metaso",
     "dashscope",
     "国产大模型"
   ],

@@ -1,5 +1,23 @@
 import type { SearchToolError, DashScopeErrorResponse } from "./types.js";
 
+type JsonApiErrorOptions = {
+  errorId?: string;
+  codeKeys?: string[];
+  messageKeys?: string[];
+  requestIdKeys?: string[];
+  codeProperty?: "provider_code" | "dashscope_code";
+};
+
+function readStringField(record: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return undefined;
+}
+
 /**
  * 构建缺少 API Key 的标准化错误对象
  */
@@ -35,6 +53,48 @@ export function buildApiError(
   };
 }
 
+export function buildJsonApiError(
+  providerId: string,
+  status: number,
+  responseBody: string,
+  options: JsonApiErrorOptions = {},
+): SearchToolError {
+  try {
+    const parsed = JSON.parse(responseBody) as Record<string, unknown>;
+    const code = readStringField(parsed, options.codeKeys ?? ["code", "error_code"]);
+    const message = readStringField(parsed, options.messageKeys ?? ["message", "error", "detail"]);
+    const requestId = readStringField(parsed, options.requestIdKeys ?? ["request_id", "requestId"]);
+
+    if (code || message || requestId) {
+      const payload: SearchToolError = {
+        error: options.errorId ?? `${providerId.replace(/-/g, "_")}_api_error`,
+        message:
+          code && message
+            ? `${providerId} 请求失败 (HTTP ${status}): [${code}] ${message}`
+            : `${providerId} 请求失败 (HTTP ${status}): ${message ?? responseBody ?? `HTTP ${status}`}`,
+        status,
+      };
+
+      if (requestId) {
+        payload.request_id = requestId;
+      }
+
+      if (code && options.codeProperty === "dashscope_code") {
+        payload.dashscope_code = code;
+      }
+      if (code && options.codeProperty !== "dashscope_code") {
+        payload.provider_code = code;
+      }
+
+      return payload;
+    }
+  } catch {
+    // JSON 解析失败，回退到通用错误
+  }
+
+  return buildApiError(providerId, status, responseBody || `HTTP ${status}`);
+}
+
 /**
  * 解析 DashScope 原生协议的错误响应 { code, message, request_id }
  * 并构建包含原始错误码的标准化错误对象
@@ -44,19 +104,10 @@ export function buildDashScopeApiError(
   status: number,
   responseBody: string,
 ): SearchToolError {
-  try {
-    const parsed = JSON.parse(responseBody) as DashScopeErrorResponse;
-    if (parsed.code && parsed.message) {
-      return {
-        error: `${providerId.replace(/-/g, "_")}_api_error`,
-        message: `${providerId} 请求失败 (HTTP ${status}): [${parsed.code}] ${parsed.message}`,
-        status,
-        dashscope_code: parsed.code,
-        request_id: parsed.request_id,
-      };
-    }
-  } catch {
-    // JSON 解析失败，回退到通用错误
-  }
-  return buildApiError(providerId, status, responseBody || `HTTP ${status}`);
+  return buildJsonApiError(providerId, status, responseBody, {
+    codeKeys: ["code"],
+    messageKeys: ["message"],
+    requestIdKeys: ["request_id"],
+    codeProperty: "dashscope_code",
+  });
 }

@@ -54,3 +54,48 @@ export function resolveProviderConfig<T extends ProviderConfig>(
 
   return { ...scopedConfig, ...pluginConfig } as T;
 }
+
+function ensureRecord(target: Record<string, unknown>, key: string): Record<string, unknown> {
+  const current = target[key];
+  if (current && typeof current === "object" && !Array.isArray(current)) {
+    return current as Record<string, unknown>;
+  }
+  const next: Record<string, unknown> = {};
+  target[key] = next;
+  return next;
+}
+
+export function resolvePluginScopedConfig(
+  config: Record<string, unknown> | undefined,
+  pluginId: string,
+  scopeKey: string,
+): Record<string, unknown> | undefined {
+  if (!config) return undefined;
+  const plugins = config.plugins as Record<string, unknown> | undefined;
+  const entries = plugins?.entries as Record<string, unknown> | undefined;
+  const entry = entries?.[pluginId] as Record<string, unknown> | undefined;
+  const pluginConfig = entry?.config as Record<string, unknown> | undefined;
+  const scopedConfig = pluginConfig?.[scopeKey];
+  if (scopedConfig && typeof scopedConfig === "object" && !Array.isArray(scopedConfig)) {
+    return scopedConfig as Record<string, unknown>;
+  }
+  return undefined;
+}
+
+export function setPluginScopedConfigValue(
+  configTarget: Record<string, unknown>,
+  pluginId: string,
+  scopeKey: string,
+  key: string,
+  value: unknown,
+): void {
+  const plugins = ensureRecord(configTarget, "plugins");
+  const entries = ensureRecord(plugins, "entries");
+  const entry = ensureRecord(entries, pluginId);
+  if (entry.enabled === undefined) {
+    entry.enabled = true;
+  }
+  const config = ensureRecord(entry, "config");
+  const scoped = ensureRecord(config, scopeKey);
+  scoped[key] = value;
+}

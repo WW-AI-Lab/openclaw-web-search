@@ -94,7 +94,7 @@ describe("query 参数校验", () => {
     mocks.readConfiguredSecretString.mockReturnValue("sk-test");
   });
 
-  it("should use readStringParam with required: true", () => {
+  it("should use readStringParam with required: true", async () => {
     mocks.readStringParam.mockImplementation(
       (_params: Record<string, unknown>, _key: string, opts?: { required?: boolean }) => {
         if (opts?.required) throw new Error("query is required");
@@ -108,7 +108,7 @@ describe("query 参数校验", () => {
       config: undefined,
     } as never);
 
-    expect(tool.execute({ query: "" })).rejects.toThrow("query is required");
+    await expect(tool.execute({ query: "" })).rejects.toThrow("query is required");
   });
 });
 

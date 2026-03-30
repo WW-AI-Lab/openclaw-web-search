@@ -40,13 +40,17 @@ openclaw-web-search/
         types.ts         ← 共享类型定义（ProviderConfig、DashScopeResponse 等）
         config.ts        ← 通用凭据解析链、配置合并工具
         errors.ts        ← 标准化错误返回构建器
+        content.ts       ← 纯文本 URL 提取与 SSE 聚合工具
         schema.ts        ← Tool Schema 构建器
         index.ts         ← 共享模块统一导出
         shared.test.ts   ← 共享模块单元测试
       qwen/              ← 通义百炼（DashScope 原生协议）
         qwen-provider.ts ← Provider 完整实现
         qwen.test.ts     ← 单元测试
-      metaso/            ← 秘塔搜索（待实现）
+      metaso/            ← 秘塔搜索
+        metaso-provider.ts ← Provider 完整实现（三种模式）
+        metaso.test.ts     ← 单元测试
+        types.ts           ← Provider 本地类型定义
       doubao/            ← 豆包（待实现）
       zhipu/             ← 智普（待实现）
   docs/
@@ -143,7 +147,7 @@ import {
 | Provider | provider id | scoped key | 环境变量 | 状态 |
 |---|---|---|---|---|
 | 通义百炼 | `qwen` | `qwen` | `DASHSCOPE_API_KEY` | 已实现 |
-| 秘塔搜索 | `metaso` | `metaso` | `METASO_API_KEY` | 待实现 |
+| 秘塔搜索 | `metaso` | `metaso` | `METASO_API_KEY` | 已实现 |
 | 豆包 | `doubao` | `doubao` | `DOUBAO_API_KEY` / `ARK_API_KEY` | 待实现 |
 | 智普搜索 | `zhipu` | `zhipu` | `ZHIPU_API_KEY` | 待实现 |
 
@@ -208,6 +212,13 @@ openclaw gateway restart
 - [ ] 非 2xx 响应返回可诊断的错误信息
 
 测试文件命名：`src/providers/{name}/{name}.test.ts`
+
+当前已落地的额外覆盖点：
+
+- Metaso `search` 模式请求体、缓存命中、响应归一化与非 2xx 错误
+- Metaso `reader` 模式纯文本读取与 citations 提取
+- Metaso `deep_research` 模式 SSE 聚合与模型切换
+- shared `buildJsonApiError`、`extractUrlsFromText`、`parseSseDataPayloads`
 
 ---
 

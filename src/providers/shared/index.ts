@@ -11,6 +11,17 @@ export type {
   DashScopeUsage,
 } from "./types.js";
 
-export { resolveCredential, resolveProviderConfig } from "./config.js";
-export { buildMissingKeyError, buildApiError, buildDashScopeApiError } from "./errors.js";
+export {
+  resolveCredential,
+  resolveProviderConfig,
+  resolvePluginScopedConfig,
+  setPluginScopedConfigValue,
+} from "./config.js";
+export {
+  buildMissingKeyError,
+  buildApiError,
+  buildJsonApiError,
+  buildDashScopeApiError,
+} from "./errors.js";
 export { buildSearchToolSchema } from "./schema.js";
+export { extractUrlsFromText, parseSseDataPayloads } from "./content.js";

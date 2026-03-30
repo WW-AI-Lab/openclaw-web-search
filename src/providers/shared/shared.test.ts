@@ -3,9 +3,11 @@ import {
   buildMissingKeyError,
   buildApiError,
   buildDashScopeApiError,
+  buildJsonApiError,
 } from "./errors.js";
 import { buildSearchToolSchema } from "./schema.js";
 import { resolveCredential } from "./config.js";
+import { extractUrlsFromText, parseSseDataPayloads } from "./content.js";
 
 // ── Mock SDK functions ──
 
@@ -137,6 +139,24 @@ describe("buildDashScopeApiError", () => {
   });
 });
 
+describe("buildJsonApiError", () => {
+  it("should parse generic provider error format", () => {
+    const err = buildJsonApiError("metaso_search", 429, JSON.stringify({
+      code: "rate_limited",
+      message: "too many requests",
+      request_id: "req-metaso-1",
+    }), {
+      errorId: "metaso_search_api_error",
+      codeProperty: "provider_code",
+    });
+
+    expect(err.error).toBe("metaso_search_api_error");
+    expect(err.provider_code).toBe("rate_limited");
+    expect(err.request_id).toBe("req-metaso-1");
+    expect(err.status).toBe(429);
+  });
+});
+
 // ── buildSearchToolSchema ──
 
 describe("buildSearchToolSchema", () => {
@@ -155,5 +175,31 @@ describe("buildSearchToolSchema", () => {
     });
     expect(schema.properties.query).toBeDefined();
     expect(schema.properties.count).toBeDefined();
+  });
+});
+
+describe("content helpers", () => {
+  it("should extract URLs from plain text and trim punctuation", () => {
+    expect(
+      extractUrlsFromText("See https://example.com/a, https://example.com/b. and https://example.com/c)")
+    ).toEqual([
+      "https://example.com/a",
+      "https://example.com/b",
+      "https://example.com/c",
+    ]);
+  });
+
+  it("should parse SSE data payloads", () => {
+    expect(parseSseDataPayloads([
+      ': keepalive',
+      'data: {"a":1}',
+      '',
+      'data: {"b":2}',
+      'data: {"c":3}',
+      '',
+    ].join("\n"))).toEqual([
+      '{"a":1}',
+      '{"b":2}\n{"c":3}',
+    ]);
   });
 });
