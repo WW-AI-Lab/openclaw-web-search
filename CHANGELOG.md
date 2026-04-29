@@ -1,5 +1,12 @@
 # 变更日志
 
+## 2026.4.29
+
+- 兼容 OpenClaw 2026.4.26+：将 `providerAuthEnvVars` 迁移至 `setup.providers[].envVars` 格式，消除启动时废弃警告
+- 更新 `peerDependencies` 最低版本要求至 `>=2026.4.10`，对齐支持 `setup.providers` 的 OpenClaw 版本
+- 更新 `openclaw.compat` 与 `openclaw.build` 版本元数据至 `2026.4.10`
+
+
 ## 2026.3.30
 
 - 新增 Metaso Web Search Provider，支持 `search`、`reader`、`deep_research` 三种模式

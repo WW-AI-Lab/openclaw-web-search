@@ -5,9 +5,11 @@
   "contracts": {
     "webSearchProviders": ["qwen", "metaso"]
   },
-  "providerAuthEnvVars": {
-    "qwen": ["DASHSCOPE_API_KEY"],
-    "metaso": ["METASO_API_KEY"]
+  "setup": {
+    "providers": [
+      { "id": "qwen", "envVars": ["DASHSCOPE_API_KEY"] },
+      { "id": "metaso", "envVars": ["METASO_API_KEY"] }
+    ]
   },
   "uiHints": {
     "qwen.apiKey": {

@@ -1,6 +1,6 @@
 {
   "name": "@ww-ai-lab/openclaw-web-search",
-  "version": "2026.3.30",
+  "version": "2026.4.29",
   "description": "OpenClaw 的独立外部联网搜索插件，逐步适配国产大模型搜索服务",
   "type": "module",
   "private": false,
@@ -31,15 +31,15 @@
       "./index.ts"
     ],
     "compat": {
-      "pluginApi": ">=2026.3.28",
-      "minGatewayVersion": "2026.3.28"
+      "pluginApi": ">=2026.4.10",
+      "minGatewayVersion": "2026.4.10"
     },
     "build": {
-      "openclawVersion": "2026.3.28",
-      "pluginSdkVersion": "2026.3.28"
+      "openclawVersion": "2026.4.10",
+      "pluginSdkVersion": "2026.4.10"
     },
     "install": {
-      "minHostVersion": ">=2026.3.28"
+      "minHostVersion": ">=2026.4.10"
     },
     "release": {
       "publishToNpm": true
@@ -68,7 +68,7 @@
     "国产大模型"
   ],
   "peerDependencies": {
-    "openclaw": ">=2026.3.22"
+    "openclaw": ">=2026.4.10"
   },
   "devDependencies": {
     "@sinclair/typebox": "^0.34.41",
